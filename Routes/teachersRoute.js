@@ -26,5 +26,7 @@ router
   .route("/teachers/supervisors")
   .get(teacherCont.getSupervisors); //get all the supervisors
 
+
+router.route("teachers/changePassword").post(teacherCont.changePassword) //change the password  
 //export route object
 module.exports = router;
