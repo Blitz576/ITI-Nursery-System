@@ -12,3 +12,5 @@ const router = express.Router(); //route object
 
 
 router.route("/register").post(registerValidator.insertValidator,validationRestult,register.insertTeacher)
+
+module.exports = router

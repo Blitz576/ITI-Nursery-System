@@ -44,9 +44,9 @@ server.use(logger("tiny")); //logger with tiny format
 /***********EndPoints***********/
 server.use(express.json()); //parse to json if data was sended by json
 
-
 //registeration
 server.use(registRoute);
+
 //authentication
 server.use(loginRoute);
 
