@@ -13,7 +13,7 @@ exports.insertValidator = [
     .isLength({ min: 6 })
     .withMessage("password must be at least 6 characters long"),
 
-  body("image").isString().withMessage("image must be a string"),
+  // body("image").isString().withMessage("image must be a string"),
 
   body("role")
     .isIn(["admin", "teacher"])
@@ -38,7 +38,7 @@ exports.updateValidator = [
     .isLength({ min: 6 })
     .withMessage("password must be at least 6 characters long"),
 
-  body("image").optional().isString().withMessage("image must be a string"),
+  // body("image").optional().isString().withMessage("image must be a string"),
 
   body("role")
     .optional()

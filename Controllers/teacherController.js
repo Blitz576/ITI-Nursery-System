@@ -1,6 +1,7 @@
 const teacherShema = require("../Model/teacherSchema"); //import schema object
 const ClassShema = require("../Model/classSchema"); //to get supervisor
 
+const file = require("fs");
 
 exports.getIdTeacher = (request, response, next) => {
   const id = request.params.id;
@@ -26,9 +27,21 @@ exports.insertTeacher = (request, response, next) => {
   const newTeacher = new teacherShema(request.body);
   newTeacher
     .save()
-    .then((data) => response.status(201).json({ data }))
+    .then((data) => {
+      file.writeFile(
+        `../uploads/${data._id}.jpg`,
+        request.file.buffer,
+        (error) => {
+          if (error) {
+            return next(Error("Error While Saving Photo"));
+          }
+          response.status(201).json({ data });
+        }
+      );
+    })
     .catch((err) => next(err));
 };
+
 
 exports.updateTeacher = (request, response, next) => {
   const id = request.body._id;
@@ -38,6 +51,13 @@ exports.updateTeacher = (request, response, next) => {
       if (!data) {
         response.status(404).json({ data: "Teacher not found" });
       }
+      file.writeFile(`../uploads/${id}.jpg`, request.file.buffer, (error) => {
+        if (error) {
+          return next(Error("Error while saving photo"));
+        }
+        response.status(200).json({ data: "Updated successfully with photo" });
+      });
+      
       response.status(200).json({ data: "updated Successful" });
     })
     .catch((err) => next(err));
@@ -57,16 +77,16 @@ exports.deleteTeacher = (request, response, next) => {
 };
 
 exports.getSupervisors = (request, response, next) => {
-    ClassShema.find({})
-      .populate({
-        path: "supervisor",
-        select: { fullName: 1 },
-      })
-      .then((data) => {
-        let supervisors = data.map((item) => item.supervisor);
-        res.status(200).json({ supervisors });
-      })
-      .catch((err) => next(err));
+  ClassShema.find({})
+    .populate({
+      path: "supervisor",
+      select: { fullName: 1 },
+    })
+    .then((data) => {
+      let supervisors = data.map((item) => item.supervisor);
+      res.status(200).json({ supervisors });
+    })
+    .catch((err) => next(err));
 };
 exports.changePassword = (req, res, next) => {
   const id = req.token._id;
@@ -90,12 +110,10 @@ exports.changePassword = (req, res, next) => {
       );
     })
     .then((updatedTeacher) => {
-      res
-        .status(200)
-        .json({
-          message: "Password updated successfully",
-          data: updatedTeacher,
-        });
+      res.status(200).json({
+        message: "Password updated successfully",
+        data: updatedTeacher,
+      });
     })
     .catch((error) => {
       next(error);

@@ -10,5 +10,4 @@ const TeacherSchema = mongosse.Schema({
   role: { type: String, enum: ["admin", "teacher"], required: true },
 });
 
-
-module.exports = mongosse.model("teachers", TeacherSchema);;
+module.exports = mongosse.model("teachers", TeacherSchema);
