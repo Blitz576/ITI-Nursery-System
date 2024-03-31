@@ -1,6 +1,3 @@
-//import express
-const { response } = require("express");
-
 const teacherShema = require("../Model/teacherSchema"); //import schema object
 const ClassShema = require("../Model/classSchema"); //to get supervisor
 
@@ -70,4 +67,37 @@ exports.getSupervisors = (request, response, next) => {
         res.status(200).json({ supervisors });
       })
       .catch((err) => next(err));
+};
+exports.changePassword = (req, res, next) => {
+  const id = req.token._id;
+  const oldPassword = req.body.old_password;
+  const newPassword = req.body.new_password;
+
+  teacherShema
+    .findById(id)
+    .then((teacher) => {
+      if (!teacher) {
+        throw new Error("Teacher not found");
+      }
+      if (teacher.password !== oldPassword) {
+        throw new Error("Incorrect old password");
+      }
+      // Update password
+      return teacherShema.findByIdAndUpdate(
+        id,
+        { password: newPassword },
+        { new: true }
+      );
+    })
+    .then((updatedTeacher) => {
+      res
+        .status(200)
+        .json({
+          message: "Password updated successfully",
+          data: updatedTeacher,
+        });
+    })
+    .catch((error) => {
+      next(error);
+    });
 };

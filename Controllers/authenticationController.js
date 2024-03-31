@@ -1,7 +1,28 @@
 const teacherShema = require("../Model/teacherSchema");
+const {adminName , adminPass} = require("../Model/admininfo")
 const jwt = require("jsonwebtoken");
 
+
+const checkAdmin= function(admin){
+  if(admin.fullName == adminName && admin.password == adminPass)
+     return true;
+
+  return false;   
+}
+
 exports.login = (req, res, next) => {
+  if(checkAdmin(req.body)){
+      let token = jwt.sign(
+        {
+          role: "admin",
+        },
+        process.env.SECRETKEY,
+        { expiresIn: "1h" }
+      );
+      res.json({ data: "Authenticated", token });
+  } 
+ 
+  else{
   teacherShema
     .findOne({
       fullName: req.body.fullName,
@@ -23,4 +44,5 @@ exports.login = (req, res, next) => {
       res.json({ data: "Authenticated", token });
     })
     .catch((err) => next(err));
+  }
 };

@@ -5,9 +5,10 @@ require("dotenv").config();
 const express = require("express"); //express
 const logger = require("morgan"); //logging in middle ware
 const multiDomain = require("cors");
-const mongoose = require("mongoose"); //dataBase
+const mongoose = require("mongoose"); //dataBase ODM
 
 //import Routes
+const registRoute = require("./Routes/regestration"); //register route object
 const loginRoute = require("./Routes/authentication"); //login route object
 const autherization = require("./Middlewares/authentication"); //authentication middle ware
 const teacherRoute = require("./Routes/teachersRoute"); //teacher route object
@@ -38,11 +39,14 @@ mongoose
 /*********MiddleWare************/
 
 //server.use(multiDomain); //multiable domains
-server.use(morgan("tiny")); //logger with tiny format
+server.use(logger("tiny")); //logger with tiny format
 
 /***********EndPoints***********/
 server.use(express.json()); //parse to json if data was sended by json
 
+
+//registeration
+server.use(registRoute);
 //authentication
 server.use(loginRoute);
 
