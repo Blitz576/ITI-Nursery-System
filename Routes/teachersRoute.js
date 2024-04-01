@@ -2,7 +2,7 @@
 const express = require("express"); //express
 
 //middleWares
-const upload = require("../Middlewares/imageBuffer"); //image uploader
+//const upload = require("../Middlewares/imageBuffer"); //image uploader
 //Controllers
 const teacherCont = require("../Controllers/teacherController");
 
@@ -18,8 +18,8 @@ const router = express.Router(); // routes Object
 router
   .route("/teachers")
   .get(teacherCont.getAllTeachers)
-  .post(insertValidator, upload ,validationResult, teacherCont.insertTeacher)
-  .put(updateValidator, upload ,validationResult, teacherCont.updateTeacher)
+  .post(insertValidator ,validationResult, teacherCont.insertTeacher)
+  .put(updateValidator,validationResult, teacherCont.updateTeacher)
   .delete(teacherCont.deleteTeacher);
 
 router.route("/teachers/:id").get(teacherCont.getIdTeacher); //get the selected teacher

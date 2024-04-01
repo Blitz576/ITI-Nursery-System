@@ -6,7 +6,7 @@ const buffer = multer.memoryStorage();
 
 //filter files
 const fileFiltering = (req, file, cb) => {
-  if (file.mimetype.starstWith("image")) {
+  if (file.mimetype.startsWith("image")) {
     cb(null, true);
   } else {
     cb(new Error("Upload Image Only"), false);
@@ -14,7 +14,7 @@ const fileFiltering = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage: buffer,
+  buffer: buffer,
   fileFilter: fileFiltering,
 });
 

@@ -1,7 +1,10 @@
 const teacherShema = require("../Model/teacherSchema"); //import schema object
 const ClassShema = require("../Model/classSchema"); //to get supervisor
 
-const file = require("fs");
+const file = require("fs"); //file system(to deal with uploads)
+
+const bycrypt = require("bcrypt"); //for encryption using hasing algorithm
+const { body } = require("express-validator");
 
 exports.getIdTeacher = (request, response, next) => {
   const id = request.params.id;
@@ -23,41 +26,59 @@ exports.getAllTeachers = (request, response, next) => {
     .catch((err) => next(err));
 };
 
-exports.insertTeacher = (request, response, next) => {
-  const newTeacher = new teacherShema(request.body);
-  newTeacher
-    .save()
-    .then((data) => {
-      file.writeFile(
-        `../uploads/${data._id}.jpg`,
-        request.file.buffer,
-        (error) => {
-          if (error) {
-            return next(Error("Error While Saving Photo"));
-          }
-          response.status(201).json({ data });
+exports.insertTeacher = async (request, response, next) => {
+  try {
+    return response.status(200).json({body: request.body , file: request.file})
+    const hashedPassword = await bycrypt.hash(request.body.password, 10);
+    //update the password with hashedPassword
+    request.body.password = hashedPassword;
+
+    
+    // Check if a file is uploaded
+    if (!request.file) {
+      return next(new Error("No file uploaded"));
+    }
+    
+    const newTeacher = new teacherShema(request.body);
+    
+    file.writeFile(
+      `../uploads/${newTeacher._id}.jpg`,
+      request.file.buffer,
+      (error) => {
+        if (error) {
+          return next(new Error("Error while saving photo"));
         }
+        response.status(201).json({ data: newTeacher });
+      }
       );
-    })
-    .catch((err) => next(err));
-};
+    } catch (error) {
+      next(error);
+    }
+    await newTeacher.save();
+  };
 
 
 exports.updateTeacher = (request, response, next) => {
   const id = request.body._id;
   teacherShema
     .findByIdAndUpdate(id, req.body, { new: true })
-    .then((data) => {
+    .then( async (data) => {
       if (!data) {
         response.status(404).json({ data: "Teacher not found" });
       }
+      //encrypt password 
+      const hashedPassword = await bycrypt.hash(request.body.password, 10);
+      //update the password with hashedPassword
+      request.body.password = hashedPassword;
+
+
       file.writeFile(`../uploads/${id}.jpg`, request.file.buffer, (error) => {
         if (error) {
           return next(Error("Error while saving photo"));
         }
         response.status(200).json({ data: "Updated successfully with photo" });
       });
-      
+
       response.status(200).json({ data: "updated Successful" });
     })
     .catch((err) => next(err));
