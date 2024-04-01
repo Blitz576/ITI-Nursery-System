@@ -15,7 +15,9 @@ const teacherRoute = require("./Routes/teachersRoute"); //teacher route object
 const childRoute = require("./Routes/childRoute"); //child toure object
 const classRoute = require("./Routes/classRoute"); //class route object
 const morgan = require("morgan");
-const uploads = require("./Middlewares/imageBuffer")
+const uploads = require("./Middlewares/imageBuffer");
+const swaggerUi = require("swagger-ui-express"); //swagger ui
+const specs = require("./SwaggarConfig"); //swagger config
 /***********Configration */
 //setting default port number
 const portNubmer = process.env.PORT || 8080; //short circut
@@ -43,16 +45,17 @@ server.use(logger("tiny")); //logger with tiny format
 
 /***********EndPoints***********/
 server.use(express.json()); //parse to json if data was sended by json
-server.use(express.urlencoded({extended: false}))
+server.use(express.urlencoded({ extended: false }));
 server.use(uploads);
-// //registeration
-// server.use(registRoute);
+server.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+//registeration
+server.use(registRoute);
 
-// //authentication
-// server.use(loginRoute);
+//authentication
+server.use(loginRoute);
 
-// //autherization
-// server.use(autherization);
+//autherization
+server.use(autherization);
 
 //teacher
 server.use(teacherRoute);

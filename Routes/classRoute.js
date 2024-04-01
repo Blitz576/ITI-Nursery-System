@@ -10,6 +10,11 @@ const validatorResult = require("../Middlewares/validatorResult");
 
 const router = express.Router(); //route object
 
+
+
+
+
+
 //******Creating routes*******
 router
   .route("/class")

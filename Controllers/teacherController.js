@@ -32,32 +32,32 @@ exports.insertTeacher = async (request, response, next) => {
     if (!request.file) {
       return next(new Error("No file uploaded"));
     }
-
-    const hashedPassword = await bycrypt.hash(request.body?.password, 10);
+    const {fullName,email,password,role}=request.body;
+    
+    const hashedPassword = await bycrypt.hash(password, 10);
 
     // Update the password with hashedPassword
     request.body.password = hashedPassword;
-
-    const newTeacher = new teacherShema(request.body);
-    newTeacher.image = `${newTeacher._id}.jpg`;
+    //return response.status(200).json({body:request.body,file:request.file})
+    const newTeacher = new teacherShema(
+    {
+      fullName,
+      password:hashedPassword,
+      email,
+      role,
+      image:request.file.originalname
+    }
+    );
+    //newTeacher.image = `${newTeacher._id}.jpg`;
     // Save the new teacher
-    newTeacher
-      .save()
-      .then(() => {
-        file.writeFile(
-          `../uploads/${newTeacher.image}`,
-          request.file.buffer,
-          (error) => {
-            if (error) {
-              return next(new Error("Error while saving photo"));
-            }
-            response.status(201).json({ data: newTeacher });
-          }
-        );
-      })
-      .catch((err) => {
-        next(new Error("Error while saving data"));
-      });
+    await newTeacher.save()
+      // .then((data) => {
+      //   return response.status(200).json({data})
+      // })
+      // .catch((err) => {
+      //   next(new Error("Error while saving data"));
+      // });
+      return response.status(200).json("teacher is added");
   } catch (error) {
     next(error);
   }
