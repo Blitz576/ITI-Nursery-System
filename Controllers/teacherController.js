@@ -50,7 +50,7 @@ exports.insertTeacher = async (request, response, next) => {
     );
     //newTeacher.image = `${newTeacher._id}.jpg`;
     // Save the new teacher
-    await newTeacher.save()
+    await newTeacher.save()   
       // .then((data) => {
       //   return response.status(200).json({data})
       // })
@@ -71,19 +71,29 @@ exports.updateTeacher = (request, response, next) => {
       if (!data) {
         response.status(404).json({ data: "Teacher not found" });
       }
-      //encrypt password
-      const hashedPassword = await bycrypt.hash(request.body.password, 10);
-      //update the password with hashedPassword
-      request.body.password = hashedPassword;
+       const { fullName, email, password, role } = request.body;
 
-      file.writeFile(`../uploads/${id}.jpg`, request.file.buffer, (error) => {
-        if (error) {
-          return next(Error("Error while saving photo"));
-        }
-        response.status(200).json({ data: "Updated successfully with photo" });
-      });
+       const hashedPassword = await bycrypt.hash(password, 10);
 
-      response.status(200).json({ data: "updated Successful" });
+       // Update the password with hashedPassword
+       request.body.password = hashedPassword;
+       //return response.status(200).json({body:request.body,file:request.file})
+       const newTeacher = new teacherShema({
+         fullName,
+         password: hashedPassword,
+         email,
+         role,
+         image: request.file.originalname,
+       });
+      await newTeacher.save();
+      // file.writeFile(`../uploads/${id}.jpg`, request.file.buffer, (error) => {
+      //   if (error) {
+      //     return next(Error("Error while saving photo"));
+      //   }
+      //   response.status(200).json({ data: "Updated successfully with photo" });
+      // });
+
+      return response.status(200).json({ data: "updated Successful" });
     })
     .catch((err) => next(err));
 };
