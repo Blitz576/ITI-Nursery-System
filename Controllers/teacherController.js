@@ -28,49 +28,53 @@ exports.getAllTeachers = (request, response, next) => {
 
 exports.insertTeacher = async (request, response, next) => {
   try {
-    return response.status(200).json({body: request.body , file: request.file})
-    const hashedPassword = await bycrypt.hash(request.body.password, 10);
-    //update the password with hashedPassword
-    request.body.password = hashedPassword;
-
-    
     // Check if a file is uploaded
     if (!request.file) {
       return next(new Error("No file uploaded"));
     }
-    
-    const newTeacher = new teacherShema(request.body);
-    
-    file.writeFile(
-      `../uploads/${newTeacher._id}.jpg`,
-      request.file.buffer,
-      (error) => {
-        if (error) {
-          return next(new Error("Error while saving photo"));
-        }
-        response.status(201).json({ data: newTeacher });
-      }
-      );
-    } catch (error) {
-      next(error);
-    }
-    await newTeacher.save();
-  };
 
+    const hashedPassword = await bycrypt.hash(request.body?.password, 10);
+
+    // Update the password with hashedPassword
+    request.body.password = hashedPassword;
+
+    const newTeacher = new teacherShema(request.body);
+    newTeacher.image = `${newTeacher._id}.jpg`;
+    // Save the new teacher
+    newTeacher
+      .save()
+      .then(() => {
+        file.writeFile(
+          `../uploads/${newTeacher.image}`,
+          request.file.buffer,
+          (error) => {
+            if (error) {
+              return next(new Error("Error while saving photo"));
+            }
+            response.status(201).json({ data: newTeacher });
+          }
+        );
+      })
+      .catch((err) => {
+        next(new Error("Error while saving data"));
+      });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.updateTeacher = (request, response, next) => {
   const id = request.body._id;
   teacherShema
     .findByIdAndUpdate(id, req.body, { new: true })
-    .then( async (data) => {
+    .then(async (data) => {
       if (!data) {
         response.status(404).json({ data: "Teacher not found" });
       }
-      //encrypt password 
+      //encrypt password
       const hashedPassword = await bycrypt.hash(request.body.password, 10);
       //update the password with hashedPassword
       request.body.password = hashedPassword;
-
 
       file.writeFile(`../uploads/${id}.jpg`, request.file.buffer, (error) => {
         if (error) {
@@ -109,34 +113,41 @@ exports.getSupervisors = (request, response, next) => {
     })
     .catch((err) => next(err));
 };
-exports.changePassword = (req, res, next) => {
+exports.changePassword = async (req, res, next) => {
   const id = req.token._id;
   const oldPassword = req.body.old_password;
   const newPassword = req.body.new_password;
 
-  teacherShema
-    .findById(id)
-    .then((teacher) => {
-      if (!teacher) {
-        throw new Error("Teacher not found");
-      }
-      if (teacher.password !== oldPassword) {
-        throw new Error("Incorrect old password");
-      }
-      // Update password
-      return teacherShema.findByIdAndUpdate(
-        id,
-        { password: newPassword },
-        { new: true }
-      );
-    })
-    .then((updatedTeacher) => {
-      res.status(200).json({
-        message: "Password updated successfully",
-        data: updatedTeacher,
-      });
-    })
-    .catch((error) => {
-      next(error);
+  try {
+    // Find the teacher by ID
+    const teacher = await teacherShema.findById(id);
+
+    // Check if teacher exists
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher not found" });
+    }
+
+    // Compare old password
+    const isMatch = await bycrypt.compare(oldPassword, teacher.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect old password" });
+    }
+
+    // Encrypt the new password
+    const hashedPassword = await bycrypt.hash(newPassword, 10);
+
+    // Update password
+    const updatedTeacher = await teacherShema.findByIdAndUpdate(
+      id,
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Password updated successfully",
+      data: updatedTeacher,
     });
+  } catch (error) {
+    next(error);
+  }
 };
